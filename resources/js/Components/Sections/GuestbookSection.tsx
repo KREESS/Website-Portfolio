@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from '@inertiajs/react';
 import { 
     MessageSquareQuote, 
@@ -6,14 +6,23 @@ import {
     Sparkles, 
     Clock, 
     ShieldCheck, 
-    AlertCircle, 
-    CheckCircle2, 
     User as UserIcon,
     RefreshCw,
     MessageCircle
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { formatDistanceToNow } from 'date-fns';
+import { ToastContainer, useToast } from '../UI/Toast';
+
+export interface ReplyItem {
+    id: number;
+    parent_id: number;
+    nickname: string;
+    message: string;
+    avatar_color: string;
+    is_admin?: boolean;
+    created_at: string;
+}
 
 export interface CommentItem {
     id: number;
@@ -21,6 +30,7 @@ export interface CommentItem {
     message: string;
     avatar_color: string;
     created_at: string;
+    replies?: ReplyItem[];
 }
 
 interface GuestbookSectionProps {
@@ -36,13 +46,16 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(initialComments.length < initialTotal);
     const [loadingMore, setLoadingMore] = useState(false);
-    const [submitFeedback, setSubmitFeedback] = useState<string | null>(null);
+    const [replyTo, setReplyTo] = useState<{ id: number; nickname: string } | null>(null);
+    const [expandedReplies, setExpandedReplies] = useState<number[]>([]);
+    const { toasts, showToast, dismissToast } = useToast();
 
     // Inertia form handling
     const { data, setData, post, processing, errors, reset, clearErrors } = useForm({
         nickname: '',
         message: '',
         avatar_color: '#2563eb',
+        parent_id: null as number | null,
         honeypot: '', // bot protection
         website_url: '', // bot protection
     });
@@ -60,39 +73,91 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         clearErrors();
-        setSubmitFeedback(null);
 
         if (!data.message.trim()) return;
+
+        const isReply = !!data.parent_id;
 
         post('/comments', {
             preserveScroll: true,
             onSuccess: () => {
-                // Optimistic instant feedback with celebratory confetti
-                confetti({
-                    particleCount: 80,
-                    spread: 70,
-                    origin: { y: 0.8 },
-                    colors: ['#2563eb', '#0ea5e9', '#38bdf8'],
-                });
+                if (isReply && data.parent_id) {
+                    // Append optimistically into the parent's replies
+                    const parentId = data.parent_id;
+                    const newReply: ReplyItem = {
+                        id: Date.now(),
+                        parent_id: parentId,
+                        nickname: data.nickname.trim() || 'Anonymous Visitor',
+                        message: data.message.trim(),
+                        avatar_color: data.avatar_color,
+                        created_at: new Date().toISOString(),
+                    };
+                    setCommentsList((prev) =>
+                        prev.map((c) =>
+                            c.id === parentId
+                                ? { ...c, replies: [...(c.replies ?? []), newReply] }
+                                : c
+                        )
+                    );
+                    setReplyTo(null);
+                    setData('parent_id', null);
+                    showToast('success', 'Balasan berhasil dikirim!');
+                } else {
+                    // Optimistic instant feedback with celebratory confetti
+                    confetti({
+                        particleCount: 80,
+                        spread: 70,
+                        origin: { y: 0.8 },
+                        colors: ['#2563eb', '#0ea5e9', '#38bdf8'],
+                    });
 
-                const newComment: CommentItem = {
-                    id: Date.now(),
-                    nickname: data.nickname.trim() || 'Anonymous Visitor',
-                    message: data.message.trim(),
-                    avatar_color: data.avatar_color,
-                    created_at: new Date().toISOString(),
-                };
+                    const newComment: CommentItem = {
+                        id: Date.now(),
+                        nickname: data.nickname.trim() || 'Anonymous Visitor',
+                        message: data.message.trim(),
+                        avatar_color: data.avatar_color,
+                        created_at: new Date().toISOString(),
+                        replies: [],
+                    };
 
-                setCommentsList((prev) => [newComment, ...prev]);
+                    setCommentsList((prev) => [newComment, ...prev]);
+                    showToast('success', 'Pesan Anda berhasil dipublikasikan!');
+                }
+
                 reset('message');
-                setSubmitFeedback('Pesan Anda berhasil dipublikasikan!');
-                setTimeout(() => setSubmitFeedback(null), 5000);
             },
             onError: (err) => {
                 console.error('Comment submit error:', err);
+                if (err.rate_limit) {
+                    showToast('error', err.rate_limit);
+                } else {
+                    showToast('error', 'Gagal mengirim pesan. Silakan coba lagi.');
+                }
             },
         });
     };
+
+    const startReply = (comment: CommentItem) => {
+        setReplyTo({ id: comment.id, nickname: comment.nickname });
+        setData('parent_id', comment.id);
+    };
+
+    const cancelReply = () => {
+        setReplyTo(null);
+        setData('parent_id', null);
+    };
+
+    const toggleReplies = (id: number) => {
+        setExpandedReplies((prev) =>
+            prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+        );
+    };
+
+    // Show rate-limit / validation errors as toast popups
+    useEffect(() => {
+        if (errors.rate_limit) showToast('error', errors.rate_limit);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [errors.rate_limit]);
 
     const loadMoreComments = async () => {
         if (loadingMore) return;
@@ -128,6 +193,9 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({
 
     return (
         <section id="comments" className="py-28 relative overflow-hidden seedance-mesh">
+            {/* Toast Notifications (top-right popups) */}
+            <ToastContainer toasts={toasts} onDismiss={dismissToast} />
+
             {/* Background lighting */}
             <div className="absolute top-1/3 right-1/4 w-[500px] h-[500px] glow-orb-coral blur-[160px] pointer-events-none -z-10" />
             <div className="absolute bottom-10 left-10 w-[500px] h-[500px] glow-orb-purple blur-[150px] pointer-events-none -z-10" />
@@ -183,6 +251,23 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({
                                         autoComplete="off"
                                     />
                                 </div>
+
+                                {/* Reply indicator */}
+                                {replyTo && (
+                                    <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-[#2563eb]/10 border border-[#2563eb]/25">
+                                        <span className="text-xs text-[#3b82f6] font-medium truncate">
+                                            Membalas komentar @{replyTo.nickname}
+                                        </span>
+                                        <button
+                                            type="button"
+                                            onClick={cancelReply}
+                                            className="text-gray-400 hover:text-white text-sm shrink-0 cursor-pointer"
+                                            aria-label="Cancel reply"
+                                        >
+                                            ✕
+                                        </button>
+                                    </div>
+                                )}
 
                                 {/* Nickname Input */}
                                 <div>
@@ -249,28 +334,12 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({
                                     )}
                                 </div>
 
-                                {/* Rate Limit / General Errors */}
-                                {errors.rate_limit && (
-                                    <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-xs text-red-400 flex items-center gap-2">
-                                        <AlertCircle className="w-4 h-4 shrink-0" />
-                                        <span>{errors.rate_limit}</span>
-                                    </div>
-                                )}
-
-                                {/* Success Feedback */}
-                                {submitFeedback && (
-                                    <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-400 flex items-center gap-2">
-                                        <CheckCircle2 className="w-4 h-4 shrink-0" />
-                                        <span>{submitFeedback}</span>
-                                    </div>
-                                )}
-
                                 <button
                                     type="submit"
                                     disabled={processing || !data.message.trim()}
                                     className="w-full py-4 px-6 rounded-2xl text-sm font-bold text-white keep-white bg-gradient-to-r from-[#2563eb] via-[#3b82f6] to-[#0ea5e9] hover:opacity-95 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2 shadow-xl shadow-[#2563eb]/25 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                                 >
-                                    <span>{processing ? 'Sending...' : 'Post Message'}</span>
+                                    <span>{processing ? 'Sending...' : replyTo ? 'Kirim Balasan' : 'Post Message'}</span>
                                 </button>
                             </form>
 
@@ -302,39 +371,114 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({
                             </div>
                         ) : (
                             <div className="space-y-4">
-                                {commentsList.map((comment) => (
-                                    <div
-                                        key={comment.id}
-                                        className="seedance-card p-6 rounded-2xl border border-white/10 group relative"
-                                    >
-                                        <div className="flex items-start justify-between gap-3 mb-3">
-                                            <div className="flex items-center gap-3">
-                                                {/* Avatar Bubble */}
-                                                <div
-                                                    className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold text-white shadow-lg"
-                                                    style={{
-                                                        backgroundColor: comment.avatar_color || '#2563eb',
-                                                    }}
-                                                >
-                                                    {comment.nickname.charAt(0).toUpperCase()}
-                                                </div>
+                                {commentsList.map((comment) => {
+                                    const replies = comment.replies ?? [];
+                                    const isExpanded = expandedReplies.includes(comment.id);
+                                    const visibleReplies = isExpanded ? replies : replies.slice(0, 2);
+                                    const hiddenCount = replies.length - visibleReplies.length;
 
-                                                <div>
-                                                    <div className="text-sm font-bold text-white group-hover:text-[#3b82f6] transition-colors font-heading">
-                                                        {comment.nickname}
+                                    return (
+                                        <div
+                                            key={comment.id}
+                                            className="seedance-card p-6 rounded-2xl border border-white/10 group relative"
+                                        >
+                                            <div className="flex items-start justify-between gap-3 mb-3">
+                                                <div className="flex items-center gap-3">
+                                                    {/* Avatar Bubble */}
+                                                    <div
+                                                        className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold text-white shadow-lg"
+                                                        style={{
+                                                            backgroundColor: comment.avatar_color || '#2563eb',
+                                                        }}
+                                                    >
+                                                        {comment.nickname.charAt(0).toUpperCase()}
                                                     </div>
-                                                    <div className="text-[11px] text-gray-400 font-mono flex items-center gap-1 mt-0.5">
-                                                        <span>{formatRelativeTime(comment.created_at)}</span>
+
+                                                    <div>
+                                                        <div className="text-sm font-bold text-white group-hover:text-[#3b82f6] transition-colors font-heading">
+                                                            {comment.nickname}
+                                                        </div>
+                                                        <div className="text-[11px] text-gray-400 font-mono flex items-center gap-1 mt-0.5">
+                                                            <span>{formatRelativeTime(comment.created_at)}</span>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
 
-                                        <p className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap pl-13 font-sans font-light">
-                                            {comment.message}
-                                        </p>
-                                    </div>
-                                ))}
+                                            <p className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap pl-13 font-sans font-light">
+                                                {comment.message}
+                                            </p>
+
+                                            {/* Replies (nested, collapsed by default) */}
+                                            {replies.length > 0 && (
+                                                <div className="mt-4 pl-4 border-l-2 border-white/10 space-y-3">
+                                                    {visibleReplies.map((reply) => (
+                                                        <div key={reply.id} className="flex items-start gap-2.5">
+                                                            <div
+                                                                className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold text-white shrink-0"
+                                                                style={{
+                                                                    backgroundColor: reply.avatar_color || '#2563eb',
+                                                                }}
+                                                            >
+                                                                {reply.nickname.charAt(0).toUpperCase()}
+                                                            </div>
+                                                            <div className="min-w-0 flex-1">
+                                                                <div className="flex items-center gap-2 flex-wrap">
+                                                                    <span
+                                                                        className={`text-xs font-semibold font-heading ${
+                                                                            reply.is_admin ? 'text-[#3b82f6]' : 'text-white'
+                                                                        }`}
+                                                                    >
+                                                                        {reply.nickname}
+                                                                    </span>
+                                                                    {reply.is_admin && (
+                                                                        <span className="text-[9px] px-1.5 py-px rounded-md bg-[#2563eb]/15 text-[#3b82f6] border border-[#2563eb]/30 font-mono font-semibold">
+                                                                            CREATOR
+                                                                        </span>
+                                                                    )}
+                                                                    <span className="text-[10px] text-gray-500 font-mono">
+                                                                        {formatRelativeTime(reply.created_at)}
+                                                                    </span>
+                                                                </div>
+                                                                <p className="text-gray-300 text-xs leading-relaxed whitespace-pre-wrap mt-0.5 font-sans font-light break-words">
+                                                                    {reply.message}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+
+                                                    {hiddenCount > 0 && (
+                                                        <button
+                                                            onClick={() => toggleReplies(comment.id)}
+                                                            className="text-[11px] font-semibold text-[#3b82f6] hover:text-[#60a5fa] transition-colors cursor-pointer"
+                                                        >
+                                                            Tampilkan {hiddenCount} balasan lainnya ↓
+                                                        </button>
+                                                    )}
+                                                    {isExpanded && replies.length > 2 && (
+                                                        <button
+                                                            onClick={() => toggleReplies(comment.id)}
+                                                            className="text-[11px] font-semibold text-gray-400 hover:text-white transition-colors cursor-pointer"
+                                                        >
+                                                            Sembunyikan balasan ↑
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            )}
+
+                                            {/* Reply action */}
+                                            {!replyTo && (
+                                                <button
+                                                    onClick={() => startReply(comment)}
+                                                    className="mt-3 inline-flex items-center gap-1.5 text-[11px] font-semibold text-gray-500 hover:text-[#3b82f6] transition-colors cursor-pointer"
+                                                >
+                                                    <MessageCircle className="w-3 h-3" />
+                                                    Balas
+                                                </button>
+                                            )}
+                                        </div>
+                                    );
+                                })}
                             </div>
                         )}
 

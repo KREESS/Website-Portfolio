@@ -12,16 +12,17 @@ import {
 } from 'lucide-react';
 import { FaGithub, FaLinkedin, FaInstagram } from 'react-icons/fa';
 import { FaXTwitter } from 'react-icons/fa6';
+import { ToastContainer, useToast } from '../UI/Toast';
 
 export const ContactSection: React.FC = () => {
     const [copiedEmail, setCopiedEmail] = useState(false);
-    const [formSent, setFormSent] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
         email: '',
         subject: '',
         message: '',
     });
+    const { toasts, showToast, dismissToast } = useToast();
 
     const email = 'adityasholahuddin@gmail.com';
 
@@ -39,8 +40,7 @@ export const ContactSection: React.FC = () => {
             `Name: ${formData.name}\nEmail: ${formData.email}\n\nMessage:\n${formData.message}`
         )}`;
         window.open(mailtoUrl, '_blank');
-        setFormSent(true);
-        setTimeout(() => setFormSent(false), 5000);
+        showToast('info', 'Membuka aplikasi email Anda dengan draft siap kirim...');
     };
 
     const socialChannels = [
@@ -76,6 +76,9 @@ export const ContactSection: React.FC = () => {
 
     return (
         <section id="contact" className="py-28 relative overflow-hidden seedance-mesh">
+            {/* Toast Notifications (top-right popups) */}
+            <ToastContainer toasts={toasts} onDismiss={dismissToast} />
+
             {/* Background Glow Orbs */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] glow-orb-coral blur-[180px] pointer-events-none -z-10" />
 
@@ -270,12 +273,6 @@ export const ContactSection: React.FC = () => {
                                     </button>
                                 </form>
                             </div>
-
-                            {formSent && (
-                                <div className="mt-4 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-400 text-center">
-                                    Opening your email app with the draft ready...
-                                </div>
-                            )}
                         </div>
                     </div>
                 </div>

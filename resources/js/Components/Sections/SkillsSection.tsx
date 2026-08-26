@@ -5,7 +5,6 @@ import {
     Database, 
     Wrench, 
     CheckCircle2, 
-    Sparkles,
     Terminal,
     Cpu,
     Boxes
@@ -24,6 +23,14 @@ export interface SkillItem {
     is_featured: boolean;
     sort_order: number;
 }
+
+// Level styling metadata (chip color per mastery level)
+const levelMeta: Record<string, string> = {
+    'Basic': 'bg-white/[0.06] text-gray-400 border-white/10',
+    'Intermediate': 'bg-[#38bdf8]/10 text-[#38bdf8] border-[#38bdf8]/25',
+    'Advanced': 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25',
+    'Expert': 'bg-amber-500/10 text-amber-400 border-amber-500/25',
+};
 
 interface SkillsSectionProps {
     skills?: SkillItem[];
@@ -168,32 +175,64 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({ skills = [] }) => 
                                         </div>
                                     </div>
 
-                                    {/* Skills Badge Pills */}
-                                    <div className="flex flex-wrap gap-2.5">
-                                        {catSkills.map((skill) => (
-                                            <div
-                                                key={skill.id}
-                                                className="px-3.5 py-2 rounded-xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/10 hover:border-white/20 text-xs font-medium text-gray-200 transition-all duration-200 flex items-center gap-2 group/item hover:scale-[1.03]"
-                                            >
-                                                <span
-                                                    className="w-2 h-2 rounded-full shrink-0 shadow-sm"
-                                                    style={{ backgroundColor: skill.color || meta.color }}
-                                                />
-                                                <span className="text-gray-100 font-mono text-[12px]">{skill.name}</span>
-                                                {skill.badge && (
-                                                    <span
-                                                        className="text-[10px] px-2 py-0.5 rounded-md font-mono font-semibold"
-                                                        style={{
-                                                            backgroundColor: `${skill.color || meta.color}15`,
-                                                            color: skill.color || '#3b82f6',
-                                                            border: `1px solid ${skill.color || meta.color}25`,
-                                                        }}
-                                                    >
-                                                        {skill.badge}
-                                                    </span>
-                                                )}
-                                            </div>
-                                        ))}
+                                    {/* Skills Cards with Level & Proficiency */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        {catSkills.map((skill) => {
+                                            const accent = skill.color || meta.color;
+                                            const levelClass = levelMeta[skill.level] || levelMeta['Basic'];
+                                            return (
+                                                <div
+                                                    key={skill.id}
+                                                    title={skill.description || skill.name}
+                                                    className="p-3.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/10 hover:border-white/20 transition-all duration-200 group/item hover:scale-[1.02]"
+                                                >
+                                                    {/* Name + Badge */}
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <span className="text-gray-100 font-mono text-xs truncate">
+                                                            {skill.name}
+                                                        </span>
+                                                        {skill.badge && (
+                                                            <span
+                                                                className="text-[10px] px-2 py-0.5 rounded-md font-mono font-semibold shrink-0"
+                                                                style={{
+                                                                    backgroundColor: `${accent}15`,
+                                                                    color: accent,
+                                                                    border: `1px solid ${accent}25`,
+                                                                }}
+                                                            >
+                                                                {skill.badge}
+                                                            </span>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Level Chip */}
+                                                    <div className="mt-2.5 flex items-center">
+                                                        <span
+                                                            className={`text-[10px] px-2 py-0.5 rounded-md font-mono font-semibold border ${levelClass}`}
+                                                        >
+                                                            {skill.level}
+                                                        </span>
+                                                    </div>
+
+                                                    {/* Proficiency Bar */}
+                                                    <div className="mt-2 flex items-center gap-2">
+                                                        <div className="flex-1 h-1.5 rounded-full bg-white/10 overflow-hidden">
+                                                            <div
+                                                                className="h-full rounded-full transition-all duration-700 group-hover/item:brightness-125"
+                                                                style={{
+                                                                    width: `${Math.min(Math.max(skill.proficiency || 0, 0), 100)}%`,
+                                                                    backgroundColor: accent,
+                                                                    boxShadow: `0 0 8px ${accent}60`,
+                                                                }}
+                                                            />
+                                                        </div>
+                                                        <span className="text-[10px] font-mono font-semibold text-gray-300 shrink-0 w-8 text-right">
+                                                            {skill.proficiency}%
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 </div>
 

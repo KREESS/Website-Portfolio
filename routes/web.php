@@ -28,8 +28,9 @@ Route::prefix('admin')->group(function () {
     // Protected Admin Routes
     Route::middleware(['auth'])->group(function () {
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
-        
+
         // Comment Moderation
+        Route::post('/comments/{id}/reply', [AdminDashboardController::class, 'reply'])->name('admin.comments.reply');
         Route::delete('/comments/{id}', [AdminDashboardController::class, 'destroy'])->name('admin.comments.destroy');
         Route::post('/comments/{id}/restore', [AdminDashboardController::class, 'restore'])->name('admin.comments.restore');
         Route::delete('/comments/{id}/force', [AdminDashboardController::class, 'forceDelete'])->name('admin.comments.force-delete');

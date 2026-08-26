@@ -48,6 +48,7 @@ class CommentController extends Controller
             'nickname' => ['nullable', 'string', 'max:50'],
             'message' => ['required', 'string', 'min:2', 'max:500'],
             'avatar_color' => ['nullable', 'string', 'max:20'],
+            'parent_id' => ['nullable', 'integer', 'exists:comments,id'],
         ]);
 
         // 4. Sanitize inputs
@@ -68,6 +69,7 @@ class CommentController extends Controller
             'avatar_color' => $avatarColor,
             'ip_address' => $ip,
             'user_agent' => Str::limit($request->userAgent() ?? '', 250),
+            'parent_id' => $validated['parent_id'] ?? null,
         ]);
 
         if ($request->wantsJson()) {

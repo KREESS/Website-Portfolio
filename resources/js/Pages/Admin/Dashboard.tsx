@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Head, Link, router, usePage, useForm } from '@inertiajs/react';
 import { 
     ShieldCheck, 
@@ -10,7 +10,6 @@ import {
     Clock, 
     Globe, 
     AlertTriangle,
-    CheckCircle2,
     ExternalLink,
     FolderGit2,
     Plus,
@@ -40,6 +39,7 @@ import {
 import { FaGithub } from 'react-icons/fa';
 import { formatDistanceToNow, format } from 'date-fns';
 import { ThemeToggle } from '../../Components/UI/ThemeToggle';
+import { ToastContainer, useToast } from '../../Components/UI/Toast';
 import { ProjectItem } from '../../Components/Sections/ProjectsSection';
 import { SkillItem } from '../../Components/Sections/SkillsSection';
 
@@ -83,6 +83,7 @@ interface DashboardProps {
 
 export default function AdminDashboard({ comments, projects, skills, filters, stats }: DashboardProps) {
     const { flash } = usePage<{ flash: { success?: string; error?: string } }>().props;
+    const { toasts, showToast, dismissToast } = useToast();
     const [searchTerm, setSearchTerm] = useState(filters.search || '');
     const [activeTab, setActiveTab] = useState<'overview' | 'skills' | 'projects' | 'comments' | 'deleted'>(filters.tab || 'overview');
     const [selectedSkillCategory, setSelectedSkillCategory] = useState<string>('all');
@@ -93,6 +94,26 @@ export default function AdminDashboard({ comments, projects, skills, filters, st
         type: 'delete' | 'restore' | 'force';
         comment: CommentRecord;
     } | null>(null);
+    const [replyModal, setReplyModal] = useState<CommentRecord | null>(null);
+    const [replyMessage, setReplyMessage] = useState('');
+    const [replySending, setReplySending] = useState(false);
+
+    const submitAdminReply = () => {
+        if (!replyModal || replyMessage.trim().length < 2) return;
+        setReplySending(true);
+        router.post(
+            `/admin/comments/${replyModal.id}/reply`,
+            { message: replyMessage.trim() },
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setReplyModal(null);
+                    setReplyMessage('');
+                },
+                onFinish: () => setReplySending(false),
+            }
+        );
+    };
 
     // Project Modals
     const [deleteProjectModal, setDeleteProjectModal] = useState<ProjectItem | null>(null);
@@ -103,6 +124,13 @@ export default function AdminDashboard({ comments, projects, skills, filters, st
     const [deleteSkillModal, setDeleteSkillModal] = useState<SkillItem | null>(null);
     const [skillModalOpen, setSkillModalOpen] = useState(false);
     const [editingSkill, setEditingSkill] = useState<SkillItem | null>(null);
+
+    // Flash messages as top-right toast popups
+    useEffect(() => {
+        if (flash?.success) showToast('success', flash.success);
+        if (flash?.error) showToast('error', flash.error);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [flash?.success, flash?.error]);
 
     // Project Form State
     const { data: projectData, setData: setProjectData, post: postProject, put: putProject, processing: projectProcessing, reset: resetProjectForm, errors: projectErrors } = useForm({
@@ -320,6 +348,9 @@ export default function AdminDashboard({ comments, projects, skills, filters, st
         <div className="min-h-screen flex flex-col md:flex-row">
             <Head title="Admin Dashboard — Aditya Putra Sholahuddin" />
 
+            {/* Toast Notifications (top-right popups) */}
+            <ToastContainer toasts={toasts} onDismiss={dismissToast} />
+
             {/* SIDEBAR NAVIGATION */}
             <aside className={`w-full md:w-64 bg-[#0d0d12]/95 border-r border-white/10 flex flex-col shrink-0 min-h-screen transition-all duration-300 z-30`}>
                 {/* Sidebar Brand Header */}
@@ -510,14 +541,6 @@ export default function AdminDashboard({ comments, projects, skills, filters, st
                 </header>
 
                 <div className="p-4 sm:p-6 lg:p-8 space-y-6">
-                    {/* Flash Notifications */}
-                    {flash?.success && (
-                        <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs flex items-center gap-2.5 animate-in fade-in">
-                            <CheckCircle2 className="w-4 h-4 shrink-0" />
-                            <span className="font-medium">{flash.success}</span>
-                        </div>
-                    )}
-
                     {/* VIEW 1: OVERVIEW */}
                     {activeTab === 'overview' && (
                         <div className="space-y-6">
@@ -954,13 +977,25 @@ export default function AdminDashboard({ comments, projects, skills, filters, st
                                                     </td>
                                                     <td className="py-4 px-4 text-right whitespace-nowrap">
                                                         {activeTab === 'comments' ? (
-                                                            <button
-                                                                onClick={() => setConfirmModal({ type: 'delete', comment: c })}
-                                                                className="px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 text-xs font-semibold transition-all inline-flex items-center gap-1 cursor-pointer"
-                                                            >
-                                                                <Trash2 className="w-3.5 h-3.5" />
-                                                                <span>Delete</span>
-                                                            </button>
+                                                            <div className="flex items-center justify-end gap-2">
+                                                                <button
+                                                                    onClick={() => {
+                                                                        setReplyModal(c);
+                                                                        setReplyMessage('');
+                                                                    }}
+                                                                    className="px-3 py-1.5 rounded-lg bg-[#2563eb]/10 hover:bg-[#2563eb]/20 text-[#3b82f6] border border-[#2563eb]/25 text-xs font-semibold transition-all inline-flex items-center gap-1 cursor-pointer"
+                                                                >
+                                                                    <MessageSquare className="w-3.5 h-3.5" />
+                                                                    <span>Reply</span>
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => setConfirmModal({ type: 'delete', comment: c })}
+                                                                    className="px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 text-xs font-semibold transition-all inline-flex items-center gap-1 cursor-pointer"
+                                                                >
+                                                                    <Trash2 className="w-3.5 h-3.5" />
+                                                                    <span>Delete</span>
+                                                                </button>
+                                                            </div>
                                                         ) : (
                                                             <div className="flex items-center justify-end gap-2">
                                                                 <button
@@ -1509,6 +1544,66 @@ export default function AdminDashboard({ comments, projects, skills, filters, st
                                 }`}
                             >
                                 Confirm {confirmModal.type === 'delete' ? 'Delete' : confirmModal.type === 'restore' ? 'Restore' : 'Purge'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* ADMIN REPLY MODAL */}
+            {replyModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="glass-panel w-full max-w-lg rounded-2xl p-6 border-white/20 bg-[#12101a] shadow-2xl">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="w-10 h-10 rounded-xl bg-[#2563eb]/20 text-[#3b82f6] flex items-center justify-center">
+                                <MessageSquare className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <h3 className="text-base font-bold text-white">Balas Komentar</h3>
+                                <p className="text-xs text-gray-400">
+                                    Balasan akan tampil sebagai <span className="text-[#3b82f6] font-semibold">CREATOR</span> di guestbook.
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Quoted comment */}
+                        <div className="p-3.5 rounded-xl bg-black/40 border border-white/10 text-xs text-gray-300 mb-4 italic">
+                            "{replyModal.message}"
+                            <div className="text-[10px] text-gray-500 not-italic mt-1">
+                                — {replyModal.nickname} ({replyModal.ip_address})
+                            </div>
+                        </div>
+
+                        <textarea
+                            rows={3}
+                            maxLength={500}
+                            autoFocus
+                            placeholder="Tulis balasan Anda..."
+                            value={replyMessage}
+                            onChange={(e) => setReplyMessage(e.target.value)}
+                            className="w-full px-4 py-2.5 bg-black/40 border border-white/10 rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-[#2563eb] resize-none"
+                        />
+                        <div className="flex items-center justify-between mt-1 mb-5">
+                            {replyMessage.trim().length > 0 && replyMessage.trim().length < 2 ? (
+                                <span className="text-[10px] text-red-400">Minimal 2 karakter.</span>
+                            ) : (
+                                <span />
+                            )}
+                            <span className="text-[10px] text-gray-500 font-mono">{replyMessage.length}/500</span>
+                        </div>
+
+                        <div className="flex items-center justify-end gap-3">
+                            <button
+                                onClick={() => setReplyModal(null)}
+                                className="px-4 py-2 rounded-xl text-xs font-semibold text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 transition-all cursor-pointer"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={submitAdminReply}
+                                disabled={replySending || replyMessage.trim().length < 2}
+                                className="px-4 py-2 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-[#2563eb] to-[#0ea5e9] hover:opacity-95 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {replySending ? 'Mengirim...' : 'Kirim Balasan'}
                             </button>
                         </div>
                     </div>

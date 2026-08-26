@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Head, useForm, Link } from '@inertiajs/react';
-import { Lock, Mail, ArrowLeft, AlertCircle } from 'lucide-react';
+import { Lock, Mail, ArrowLeft } from 'lucide-react';
 import { ThemeToggle } from '../../Components/UI/ThemeToggle';
+import { ToastContainer, useToast } from '../../Components/UI/Toast';
 
 export default function AdminLogin() {
     const { data, setData, post, processing, errors } = useForm({
@@ -9,6 +10,13 @@ export default function AdminLogin() {
         password: '',
         remember: true,
     });
+    const { toasts, showToast, dismissToast } = useToast();
+
+    // Show login failure as a top-right toast popup
+    useEffect(() => {
+        if (errors.email) showToast('error', errors.email);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [errors.email]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -18,6 +26,9 @@ export default function AdminLogin() {
     return (
         <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
             <Head title="Admin Portal — Aditya Putra Sholahuddin" />
+
+            {/* Toast Notifications (top-right popups) */}
+            <ToastContainer toasts={toasts} onDismiss={dismissToast} />
 
             {/* Ambient background */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[560px] h-[560px] glow-orb-coral blur-[150px] pointer-events-none" />
@@ -49,13 +60,6 @@ export default function AdminLogin() {
                         Sign in to manage projects, skills, and comments.
                     </p>
                 </div>
-
-                {errors.email && (
-                    <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-xs text-red-400 flex items-center gap-2">
-                        <AlertCircle className="w-4 h-4 shrink-0" />
-                        <span>{errors.email}</span>
-                    </div>
-                )}
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>

@@ -64,6 +64,33 @@ class DashboardController extends Controller
         return back()->with('success', 'Komentar berhasil dihapus (soft-deleted).');
     }
 
+    /**
+     * Admin replies to a guestbook comment
+     */
+    public function reply(Request $request, int $id)
+    {
+        $parent = Comment::findOrFail($id);
+
+        // Flatten: always attach to the top-level parent
+        $parentId = $parent->parent_id ?? $parent->id;
+
+        $validated = $request->validate([
+            'message' => ['required', 'string', 'min:2', 'max:500'],
+        ]);
+
+        Comment::create([
+            'nickname' => 'Aditya P. S.',
+            'message' => trim(strip_tags($validated['message'])),
+            'avatar_color' => '#2563eb',
+            'ip_address' => $request->ip(),
+            'user_agent' => 'Admin Panel',
+            'parent_id' => $parentId,
+            'is_admin' => true,
+        ]);
+
+        return back()->with('success', "Balasan atas komentar #{$id} berhasil dikirim!");
+    }
+
     public function restore(int $id)
     {
         $comment = Comment::onlyTrashed()->findOrFail($id);

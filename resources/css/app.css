@@ -250,6 +250,68 @@ html.light .glow-orb-cyan {
   animation: shimmer 4s infinite;
 }
 
+/* ---------- Toast notifications (top-right popups) ---------- */
+
+/* Surface follows the active theme (dark default, light remap below) */
+.toast-surface {
+  background: linear-gradient(135deg, rgba(24, 22, 36, 0.92) 0%, rgba(13, 12, 20, 0.96) 100%);
+}
+
+.toast-message { color: #f3f4f6; }
+.toast-close { color: #9ca3af; }
+.toast-close:hover { color: #f3f4f6; }
+
+html.light .toast-surface {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.97) 0%, rgba(246, 247, 251, 0.99) 100%);
+}
+
+html.light .toast-message { color: var(--tx); }
+html.light .toast-close { color: var(--tx3); }
+html.light .toast-close:hover { color: var(--tx); }
+
+@keyframes toast-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(calc(100% + 2rem)) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes toast-slide-out {
+  from {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+    max-height: 200px;
+  }
+  to {
+    opacity: 0;
+    transform: translateX(calc(100% + 2rem)) scale(0.95);
+    max-height: 0;
+    margin-bottom: -0.75rem;
+  }
+}
+
+@keyframes toast-progress-bar {
+  from { width: 100%; }
+  to { width: 0%; }
+}
+
+.toast-enter {
+  animation: toast-slide-in 0.4s cubic-bezier(0.21, 1.02, 0.73, 1) both;
+}
+
+.toast-exit {
+  animation: toast-slide-out 0.3s ease-in both;
+  pointer-events: none;
+}
+
+.toast-progress {
+  animation: toast-progress-bar 5s linear forwards;
+}
+
 /* ---------- Light-theme remaps for shared utility colors ---------- */
 
 html.light .text-white:not(.keep-white) { color: var(--tx); }
