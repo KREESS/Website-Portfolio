@@ -49,7 +49,7 @@ This project is a **portfolio website** built to showcase personal information s
 ## 📸 Website Preview
 
 <p align="center">
-  <img width="100%" alt="Portfolio Website Screenshot" src="https://github.com/user-attachments/assets/67e0cfde-64b8-41e8-9f8a-a7d3a088a31e">
+    <img width="1910" height="1099" alt="Web portfolio new" src="https://github.com/user-attachments/assets/c76085de-4b74-45d3-96b4-302408a2aaa2" />
 </p>
 
 ## ✨ Features
