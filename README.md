@@ -38,7 +38,7 @@
 | **Website** | [kreess.my.id](https://kreess.my.id) |
 | **LinkedIn** | [Aditya Putra Sholahuddin](https://www.linkedin.com/in/aditya-putra-sholahuddin-717a8921a/) |
 | **Instagram** | [@xxaditptr_](https://instagram.com/xxaditptr_) |
-| **Email** | _add your email here_ |
+| **Email** | adityasholahuddin@gmail.com |
 
 ---
 
@@ -196,7 +196,7 @@ This project is open-sourced under the [MIT License](https://opensource.org/lice
 If you have any questions, collaboration ideas, or feedback, feel free to reach out:
 
 - 👤 **Name:** Aditya Putra Sholahuddin
-- 📧 **Email:** _add your email here_
+- 📧 **Email:** adityasholahuddin@gmail.com
 - 💼 **LinkedIn:** [Aditya Putra Sholahuddin](https://www.linkedin.com/in/aditya-putra-sholahuddin-717a8921a/)
 - 📸 **Instagram:** [@xxaditptr_](https://instagram.com/xxaditptr_)
 - 🌐 **Website:** [kreess.my.id](https://kreess.my.id)
