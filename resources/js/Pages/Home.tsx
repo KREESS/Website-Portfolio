@@ -6,42 +6,46 @@ import { AboutSection } from '../Components/Sections/AboutSection';
 import { CareerSection } from '../Components/Sections/CareerSection';
 import { SkillsSection, SkillItem } from '../Components/Sections/SkillsSection';
 import { ProjectsSection, ProjectItem } from '../Components/Sections/ProjectsSection';
-import { GuestbookSection, CommentItem } from '../Components/Sections/GuestbookSection';
 import { ContactSection } from '../Components/Sections/ContactSection';
 import { Footer } from '../Components/Layout/Footer';
 
 interface HomePageProps {
-    initialComments: CommentItem[];
-    totalComments: number;
     projects: ProjectItem[];
     skills: SkillItem[];
 }
 
-export default function Home({ initialComments, totalComments, projects, skills }: HomePageProps) {
+export default function Home({ projects, skills }: HomePageProps) {
     const [activeSection, setActiveSection] = useState('hero');
     const { props } = usePage<{ auth: { user: { id: number; name: string } | null } }>();
     const isAdmin = Boolean(props.auth?.user);
 
     useEffect(() => {
-        const sections = ['hero', 'about', 'career', 'skills', 'projects', 'comments', 'contact'];
+        const sections = ['hero', 'about', 'career', 'skills', 'projects', 'contact'];
+        let ticking = false;
 
         const handleScroll = () => {
-            const scrollY = window.scrollY + 200;
+            if (!ticking) {
+                window.requestAnimationFrame(() => {
+                    const scrollY = window.scrollY + window.innerHeight / 3;
 
-            for (const sectionId of sections) {
-                const el = document.getElementById(sectionId);
-                if (el) {
-                    const top = el.offsetTop;
-                    const height = el.offsetHeight;
-                    if (scrollY >= top && scrollY < top + height) {
-                        setActiveSection(sectionId);
-                        break;
+                    for (const sectionId of sections) {
+                        const el = document.getElementById(sectionId);
+                        if (el) {
+                            const top = el.offsetTop;
+                            const height = el.offsetHeight;
+                            if (scrollY >= top && scrollY < top + height) {
+                                setActiveSection(sectionId);
+                                break;
+                            }
+                        }
                     }
-                }
+                    ticking = false;
+                });
+                ticking = true;
             }
         };
 
-        window.addEventListener('scroll', handleScroll);
+        window.addEventListener('scroll', handleScroll, { passive: true });
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
@@ -71,10 +75,6 @@ export default function Home({ initialComments, totalComments, projects, skills 
                 <CareerSection />
                 <SkillsSection skills={skills} />
                 <ProjectsSection projects={projects} />
-                <GuestbookSection
-                    initialComments={initialComments}
-                    totalComments={totalComments}
-                />
                 <ContactSection />
             </main>
 

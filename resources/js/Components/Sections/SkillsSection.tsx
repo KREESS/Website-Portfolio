@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { 
-    Code2, 
-    Layers, 
-    Database, 
-    Wrench, 
-    CheckCircle2, 
+import {
+    Code2,
+    Layers,
+    Database,
+    Wrench,
+    CheckCircle2,
     Terminal,
     Cpu,
     Boxes
@@ -85,12 +85,9 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({ skills = [] }) => 
             <div className="absolute bottom-10 right-0 w-[500px] h-[500px] glow-orb-coral blur-[150px] pointer-events-none -z-10" />
 
             <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                
+
                 {/* Section Title Header Moncy/Seedance Luxury Clean Aesthetics */}
                 <div className="flex flex-col items-center text-center mb-16">
-                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.04] border border-white/10 text-xs font-mono text-[#38bdf8] mb-4 backdrop-blur-md shadow-inner">
-                        <span>MY STACK</span>
-                    </div>
                     <h2 className="text-3xl sm:text-5xl md:text-6xl font-extrabold text-white tracking-tight font-heading">
                         Skills & <span className="text-gradient-seedance">Technologies</span>
                     </h2>
@@ -104,11 +101,10 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({ skills = [] }) => 
                 <div className="flex flex-wrap items-center justify-center gap-2.5 mb-14">
                     <button
                         onClick={() => setActiveTab('all')}
-                        className={`px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-medium transition-all duration-300 cursor-pointer ${
-                            activeTab === 'all'
+                        className={`px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-medium transition-all duration-300 cursor-pointer ${activeTab === 'all'
                                 ? 'bg-gradient-to-r from-[#2563eb] via-[#3b82f6] to-[#0ea5e9] text-white keep-white shadow-xl shadow-[#2563eb]/25 border border-white/20 scale-105'
                                 : 'text-gray-400 hover:text-white bg-white/[0.03] hover:bg-white/[0.08] border border-white/5'
-                        }`}
+                            }`}
                     >
                         All Capabilities ({skills.length})
                     </button>
@@ -119,11 +115,10 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({ skills = [] }) => 
                             <button
                                 key={catName}
                                 onClick={() => setActiveTab(catName)}
-                                className={`px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-medium transition-all duration-300 cursor-pointer ${
-                                    isCurrent
+                                className={`px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-medium transition-all duration-300 cursor-pointer ${isCurrent
                                         ? 'bg-gradient-to-r from-[#0ea5e9] to-[#38bdf8] text-white keep-white shadow-xl shadow-purple-500/25 border border-white/20 scale-105'
                                         : 'text-gray-400 hover:text-white bg-white/[0.03] hover:bg-white/[0.08] border border-white/5'
-                                }`}
+                                    }`}
                             >
                                 {catName} ({count})
                             </button>

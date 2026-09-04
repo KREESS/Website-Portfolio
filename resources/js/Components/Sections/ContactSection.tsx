@@ -86,9 +86,6 @@ export const ContactSection: React.FC = () => {
                 
                 {/* Section Header */}
                 <div className="flex flex-col items-center text-center mb-16">
-                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.04] border border-white/10 text-xs font-mono text-[#10b981] mb-4 backdrop-blur-md shadow-inner">
-                        <span>CONTACT</span>
-                    </div>
                     <h2 className="text-3xl sm:text-5xl md:text-6xl font-extrabold text-white tracking-tight font-heading">
                         Let's Build Something <span className="text-gradient-seedance">Great</span>
                     </h2>

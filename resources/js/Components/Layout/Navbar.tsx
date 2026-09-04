@@ -11,6 +11,7 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({ activeSection, setActiveSection, isAdmin }) => {
     const [scrolled, setScrolled] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
+    const [hoveredItem, setHoveredItem] = useState<string | null>(null);
 
     useEffect(() => {
         const handleScroll = () => {
@@ -31,7 +32,6 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, setActiveSection,
         { id: 'career', label: 'Career' },
         { id: 'skills', label: 'Skills' },
         { id: 'projects', label: 'Projects' },
-        { id: 'comments', label: 'Guestbook' },
         { id: 'contact', label: 'Contact' },
     ];
 
@@ -76,14 +76,19 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, setActiveSection,
                     <div className="hidden md:flex items-center gap-1.5 bg-black/40 p-1.5 rounded-2xl border border-white/5">
                         {navItems.map((item) => {
                             const isActive = activeSection === item.id;
+                            const isHovered = hoveredItem === item.id;
                             return (
                                 <button
                                     key={item.id}
                                     onClick={() => scrollTo(item.id)}
-                                    className={`relative px-4 py-2 rounded-xl text-xs font-semibold tracking-wide transition-all duration-200 cursor-pointer ${
+                                    onMouseEnter={() => setHoveredItem(item.id)}
+                                    onMouseLeave={() => setHoveredItem(null)}
+                                    className={`relative px-4 py-2 rounded-xl text-xs font-semibold tracking-wide transition-colors duration-150 cursor-pointer ${
                                         isActive
                                             ? 'text-white bg-white/[0.08] border border-white/15 shadow-sm'
-                                            : 'text-gray-400 hover:text-white hover:bg-white/5'
+                                            : isHovered
+                                                ? 'text-white bg-white/[0.05]'
+                                                : 'text-gray-400'
                                     }`}
                                 >
                                     <span>{item.label}</span>
@@ -128,7 +133,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, setActiveSection,
                                 <button
                                     key={item.id}
                                     onClick={() => scrollTo(item.id)}
-                                    className={`w-full flex items-center px-4 py-3.5 rounded-2xl text-sm font-semibold transition-all ${
+                                    className={`w-full flex items-center px-4 py-3.5 rounded-2xl text-sm font-semibold transition-colors duration-150 ${
                                         isActive
                                             ? 'bg-[#2563eb]/15 text-white border border-[#2563eb]/30'
                                             : 'text-gray-300 hover:bg-white/5'

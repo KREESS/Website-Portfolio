@@ -152,9 +152,6 @@ export const CareerSection: React.FC = () => {
             <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
                 <div className="flex flex-col items-center text-center mb-24">
-                    <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-white/[0.04] border border-white/10 text-xs font-mono text-[#2563eb] mb-4 backdrop-blur-md">
-                        <span>MY JOURNEY</span>
-                    </div>
                     <h2 className="text-3xl sm:text-5xl md:text-6xl font-extrabold text-white tracking-tight font-heading">
                         Project <span className="text-gradient-seedance">Journey</span>
                     </h2>

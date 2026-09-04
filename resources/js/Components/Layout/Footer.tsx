@@ -74,6 +74,12 @@ export const Footer: React.FC = () => {
                     {/* Right: Back to top & admin entry */}
                     <div className="flex items-center gap-4">
                         <Link
+                            href="/guestbook"
+                            className="text-xs font-mono text-gray-500 hover:text-gray-300 transition-colors flex items-center gap-1.5"
+                        >
+                            Guestbook
+                        </Link>
+                        <Link
                             href="/admin/login"
                             className="text-xs font-mono text-gray-500 hover:text-gray-300 transition-colors flex items-center gap-1.5"
                         >

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useForm } from '@inertiajs/react';
+import { useForm, Link } from '@inertiajs/react';
 import { 
     MessageSquareQuote, 
     Send, 
@@ -8,7 +8,8 @@ import {
     ShieldCheck, 
     User as UserIcon,
     RefreshCw,
-    MessageCircle
+    MessageCircle,
+    ArrowLeft
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { formatDistanceToNow } from 'date-fns';
@@ -192,7 +193,7 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({
     };
 
     return (
-        <section id="comments" className="py-28 relative overflow-hidden seedance-mesh">
+        <section id="comments" className="py-10 relative overflow-hidden seedance-mesh">
             {/* Toast Notifications (top-right popups) */}
             <ToastContainer toasts={toasts} onDismiss={dismissToast} />
 
@@ -202,11 +203,19 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({
 
             <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
                 
+                {/* Back to Home */}
+                <div className="mb-8">
+                    <Link
+                        href="/"
+                        className="inline-flex items-center gap-2 text-xs font-mono text-gray-500 hover:text-gray-300 transition-colors"
+                    >
+                        <ArrowLeft className="w-3.5 h-3.5" />
+                        Back to Home
+                    </Link>
+                </div>
+
                 {/* Section Title */}
                 <div className="flex flex-col items-center text-center mb-16">
-                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.04] border border-white/10 text-xs font-mono text-[#3b82f6] mb-4 backdrop-blur-md shadow-inner">
-                        <span>GUESTBOOK</span>
-                    </div>
                     <h2 className="text-3xl sm:text-5xl md:text-6xl font-extrabold text-white tracking-tight font-heading">
                         <span className="text-gradient-seedance">Guestbook</span>
                     </h2>
@@ -222,8 +231,7 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({
                     <div className="lg:col-span-5">
                         <div className="seedance-card p-7 sm:p-8 rounded-3xl border border-white/10 sticky top-28 shadow-2xl">
                             <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-lg font-bold text-white flex items-center gap-2 font-heading">
-                                    <Sparkles className="w-4 h-4 text-[#2563eb]" />
+                                <h3 className="text-lg font-bold text-white font-heading">
                                     Say Something
                                 </h3>
                                 <span className="text-[10px] font-mono text-emerald-400 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
